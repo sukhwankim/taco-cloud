@@ -3,7 +3,9 @@ package tacos;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Arrays;
@@ -13,6 +15,8 @@ import java.util.stream.Collectors;
 import tacos.Taco;
 import tacos.Ingredient;
 import tacos.Ingredient.Type;
+
+import javax.validation.Valid;
 
 @Slf4j //Lombok에서 저공 Simple Logging Facade Logger 생성
 @Controller
@@ -45,7 +49,11 @@ public class DesignTacoController {
             model.addAttribute(type.toString().toLowerCase() ,filterByType(ingredients,type));
         } //toLowerCase() <소문자로 변환
 
+
+
         model.addAttribute("taco",new Taco());
+
+        System.out.println("model :::"+model);
 
         return "design";
     }
@@ -55,5 +63,19 @@ public class DesignTacoController {
         return ingredients.stream()
                           .filter(x -> x.getType().equals(type))
                           .collect(Collectors.toList());
+    }
+
+    //@Valid : 각 폼의 POST 요청 처리시 유효성 검사 수행하도록 함.
+    @PostMapping
+    public String processDesign(@Valid Taco design, Errors errors){
+        if(errors.hasErrors()){
+            return "design";
+        }
+
+        //이 지점에서 타코 디자인(선택된 식자재 내역)을 저장한다
+        //이 작업은 3장에서 할것이다.
+        log.info("Processing design : "+design);
+
+        return "redirect:/orders/current";
     }
 }
