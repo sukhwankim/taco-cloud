@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,19 +16,23 @@ import tacos.Taco;
 import tacos.Ingredient;
 import tacos.Ingredient.Type;
 import tacos.data.IngredientRepository;
+import tacos.data.TacoRepository;
 
 import javax.validation.Valid;
 
 @Slf4j //Lombok에서 저공 Simple Logging Facade Logger 생성
 @Controller
 @RequestMapping("/design")
+@SessionAttributes("order")
 public class DesignTacoController {
 
     private final IngredientRepository ingredientRepo;
+    private TacoRepository tacoRepo;
 
     @Autowired
-    public DesignTacoController(IngredientRepository ingredientRepo){
+    public DesignTacoController(IngredientRepository ingredientRepo, TacoRepository tacoRepo){
         this.ingredientRepo = ingredientRepo;
+        this.tacoRepo = tacoRepo;
     }
 
 
@@ -81,9 +83,20 @@ public class DesignTacoController {
                           .collect(Collectors.toList());
     }
 
+    @ModelAttribute(name = "order")
+    public Order order(){
+        return new Order();
+    }
+
+    @ModelAttribute(name = "taco")
+    public Taco taco(){
+        return new Taco();
+    }
+
+
     //@Valid : 각 폼의 POST 요청 처리시 유효성 검사 수행하도록 함.
     @PostMapping
-    public String processDesign(@Valid Taco design, Errors errors){
+    public String processDesign(@Valid Taco design, Errors errors, @ModelAttribute Order order){
         if(errors.hasErrors()){
             return "design";
         }
@@ -91,7 +104,10 @@ public class DesignTacoController {
         //이 지점에서 타코 디자인(선택된 식자재 내역)을 저장한다
         //이 작업은 3장에서 할것이다.
         log.info("Processing design : "+design);
+        Taco saved = tacoRepo.save(design);
+        order.addDesign(saved);
 
         return "redirect:/orders/current";
     }
+
 }
